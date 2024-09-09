@@ -15,6 +15,9 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import static org.apache.spark.sql.functions.callUDF;
+import static org.apache.spark.sql.functions.col;
+
 public class SparkProjectRunner {
 
     public static final ObjectMapper OBJECT_MAPPER = RosettaObjectMapperCreator.forJSON().create();
@@ -43,17 +46,14 @@ public class SparkProjectRunner {
         UDF1<VariantVal, String> runReport = jsonInput -> runProject(jsonInput.toString(), functionInputType, functionName, xmlConfigPath);
         spark.udf().register(runName, runReport, DataTypes.StringType);
 
-        Dataset<Row> df = spark.sql("select * from %s.%s".formatted(databaseName, inputTable));
-
-        df = df.withColumn("data", functions.callUDF(runName, df.col("data")));
-//        df = df.withColumn("data", functions.to_xml(df.col("data")));
+        Dataset<Row> df = spark.read().table("%s.%s".formatted(databaseName, inputTable))
+                .withColumn("data", callUDF(runName, col("data")));
 
         df.write().mode(SaveMode.Overwrite).saveAsTable("%s.%s".formatted(databaseName, runName));
 
         // see https://docs.databricks.com/en/query/formats/xml.html
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public static String runProject(String jsonInput, String functionInputType, String functionName, String xmlConfigPath) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Injector injector = Guice.createInjector(new DrrRuntimeModule());
         Class<?> functionClass = Class.forName(functionName);

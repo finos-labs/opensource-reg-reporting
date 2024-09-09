@@ -15,6 +15,7 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.unsafe.types.VariantVal;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.spark.sql.functions.col;
 
@@ -44,7 +45,7 @@ public class SparkReportRunner {
         UDF1<VariantVal, String> runReport = jsonInput -> runReport(jsonInput.toString(), functionInputType, functionName);
         spark.udf().register(runName, runReport, DataTypes.StringType);
 
-        spark.udf().register(runName, runReport, DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
+//        spark.udf().register(runName, runReport, DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
         
         Dataset<Row> df = spark.read().table("%s.%s".formatted(databaseName, inputTable))
                 .withColumn("data", functions.callUDF(runName, col("data")))
@@ -63,13 +64,18 @@ public class SparkReportRunner {
         return OBJECT_MAPPER.writeValueAsString(evaluate);
     }
 
-    public static String runValidationReport(String jsonInput, String functionInputType, String functionName) throws JsonProcessingException, ClassNotFoundException {
-        Injector injector = Guice.createInjector(new DrrRuntimeModule());
-        Class<?> functionClass = Class.forName(functionName);
-        Class<?> functionInputTypeClass = Class.forName(functionInputType);
-        ReportFunction reportFunction = (ReportFunction<?, ?>) injector.getInstance(functionClass);
-        Object transactionReportInstruction = OBJECT_MAPPER.readValue(jsonInput, functionInputTypeClass);
-        Object evaluate = reportFunction.evaluate(transactionReportInstruction);
-        return OBJECT_MAPPER.writeValueAsString(evaluate);
-    }
+//    public static Map<String, String> runReportAndValidation(String jsonInput, String functionInputType, String functionName) throws JsonProcessingException, ClassNotFoundException {
+//        Injector injector = Guice.createInjector(new DrrRuntimeModule());
+//        Class<?> functionClass = Class.forName(functionName);
+//        Class<?> functionInputTypeClass = Class.forName(functionInputType);
+//        ReportFunction reportFunction = (ReportFunction<?, ?>) injector.getInstance(functionClass);
+//        Object transactionReportInstruction = OBJECT_MAPPER.readValue(jsonInput, functionInputTypeClass);
+//        Object evaluate = reportFunction.evaluate(transactionReportInstruction);
+//        
+//        
+//        
+//        
+//        
+//        return OBJECT_MAPPER.writeValueAsString(evaluate);
+//    }
 }
