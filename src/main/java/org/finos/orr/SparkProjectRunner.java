@@ -24,15 +24,8 @@ public class SparkProjectRunner {
 
     public static void main(String[] args) {
         if (args.length != 6) {
-            System.out.println("Usage: SparkProjectRunner <run-name> <function-name> <function-input-type> <catalog.schema> <input-table>");
-            System.out.println("""
-                    Example: ["esma_emir_trade_iso20022",
-                              "drr.projection.iso20022.esma.emir.refit.trade.functions.Project_EsmaEmirTradeReportToIso20022",
-                              "drr.regulation.esma.emir.refit.trade.ESMAEMIRTransactionReport",
-                              "xml-config/auth030-esma-rosetta-xml-config.json",
-                              "opensource_reg_reporting.orr",
-                              "esma_emir_trade_report_json"]
-                    """);
+            printUsage();
+            return;
         }
         String runName = args[0];
         String functionName = args[1];
@@ -50,17 +43,25 @@ public class SparkProjectRunner {
                 .withColumn("data", callUDF(runName, col("data")));
 
         df.write().mode(SaveMode.Overwrite).saveAsTable("%s.%s".formatted(databaseName, runName));
+    }
 
-        // see https://docs.databricks.com/en/query/formats/xml.html
+    private static void printUsage() {
+        System.out.println("Usage: SparkProjectRunner <run-name> <function-name> <function-input-type> <catalog.schema> <input-table>");
+        System.out.println("""
+                Example: ["esma_emir_trade_iso20022",
+                          "drr.projection.iso20022.esma.emir.refit.trade.functions.Project_EsmaEmirTradeReportToIso20022",
+                          "drr.regulation.esma.emir.refit.trade.ESMAEMIRTransactionReport",
+                          "opensource_reg_reporting.orr",
+                          "esma_emir_trade_report_json"]
+                """);
     }
 
     public static String runProject(String jsonInput, String functionInputType, String functionName, String xmlConfigPath) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Injector injector = Guice.createInjector(new DrrRuntimeModule());
-        Class<?> functionClass = Class.forName(functionName);
         Class<?> functionInputTypeClass = Class.forName(functionInputType);
-        Method evalulateMethod = functionClass.getMethod("evaluate", functionInputTypeClass);
+        Method evalulateMethod = Class.forName(functionName).getMethod("evaluate", functionInputTypeClass);
         Object transactionReportInstruction = OBJECT_MAPPER.readValue(jsonInput, functionInputTypeClass);
-        Object projectFunction = injector.getInstance(functionClass);
+        Object projectFunction = injector.getInstance(evalulateMethod.getDeclaringClass());
         Object evaluate = evalulateMethod.invoke(projectFunction, transactionReportInstruction);
         InputStream conf = SparkProjectRunner.class.getClassLoader().getResourceAsStream(xmlConfigPath);
         ObjectMapper xmlMapper = RosettaObjectMapperCreator.forXML(conf).create();
