@@ -1,6 +1,13 @@
 package org.finos.orr;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.regnosys.rosetta.common.serialisation.RosettaObjectMapper;
+
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestReport {
 
@@ -1663,9 +1670,9 @@ public class TestReport {
               }
             }
             """;
-    
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        String s1 = SparkReportRunner.runReport(SAMPLE, "drr.regulation.common.TransactionReportInstruction", "drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction");
-        System.out.printf(s1);
+        HashMap<String, String> s1 = SparkReportRunner.runReport(SAMPLE, "drr.regulation.common.TransactionReportInstruction", "drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction");
+        s1.forEach((k, v) -> System.out.println(k + " --> " + v));
     }
 }

@@ -1,28 +1,22 @@
 package org.finos.orr;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.regnosys.drr.DrrRuntimeModule;
 import com.regnosys.rosetta.common.serialisation.RosettaObjectMapperCreator;
-import com.regnosys.rosetta.common.validation.RosettaTypeValidator;
-import com.regnosys.rosetta.common.validation.ValidationReport;
 import com.rosetta.model.lib.reports.ReportFunction;
-import drr.regulation.cftc.rewrite.CFTCPart45TransactionReport;
-import drr.regulation.common.TransactionReportInstruction;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import org.apache.spark.unsafe.types.VariantVal;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.explode;
 
 public class SparkReportRunner {
 
@@ -41,13 +35,18 @@ public class SparkReportRunner {
 
         SparkSession spark = SparkSession.builder().appName(runName).getOrCreate();
 
-        UDF1<VariantVal, String> runReport = jsonInput -> runReport(jsonInput.toString(), functionInputType, functionName);
-        spark.udf().register(runName, runReport, DataTypes.StringType);
+        UDF1<VariantVal, Map<String, String>> runReport = jsonInput -> runReport(jsonInput.toString(), functionInputType, functionName);
+        spark.udf().register(runName, runReport, DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
 
         Dataset<Row> df = spark.read().table("%s.%s".formatted(databaseName, inputTable))
-                .withColumn("data", functions.callUDF(runName, col("data")))
-                .withColumn("data", functions.parse_json(col("data")));
-        df.write().mode(SaveMode.Overwrite).saveAsTable("%s.%s".formatted(databaseName, runName + "_json"));
+                .withColumn("result", functions.callUDF(runName, col("data")))
+                .withColumn("data", functions.parse_json(col("result.object")))
+//                .withColumn("exploded", functions.explode(col("result")))
+//                .drop(col("result"))
+//                .drop(col("object"))
+                ;
+        df.write().mode(SaveMode.Overwrite).option("mergeSchema", "true")
+                .saveAsTable("%s.%s".formatted(databaseName, runName + "_json"));
     }
 
     private static void printUsage() {
@@ -62,11 +61,16 @@ public class SparkReportRunner {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static String runReport(String jsonInput, String functionInputType, String functionName) throws JsonProcessingException, ClassNotFoundException {
+    public static HashMap<String, String> runReport(String jsonInput, String functionInputType, String functionName) throws JsonProcessingException, ClassNotFoundException {
         Injector injector = Guice.createInjector(new DrrRuntimeModule());
         ReportFunction reportFunction = (ReportFunction<?, ?>) injector.getInstance(Class.forName(functionName));
         Object transactionReportInstruction = OBJECT_MAPPER.readValue(jsonInput, Class.forName(functionInputType));
         Object evaluate = reportFunction.evaluate(transactionReportInstruction);
-        return OBJECT_MAPPER.writeValueAsString(evaluate);
+        HashMap<String, String> result = new HashMap<>();
+        String object = OBJECT_MAPPER.writeValueAsString(evaluate);
+        result.put("object", object);
+        JsonNode jsonNode = OBJECT_MAPPER.readTree(object);
+        result.putAll(JsonFlatten.flattenJson(jsonNode));
+        return result;
     }
 }
