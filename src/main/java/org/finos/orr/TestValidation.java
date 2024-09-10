@@ -68,7 +68,7 @@ public class TestValidation {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         List<Map<String, String>> validations = SparkValidationRunner.runValidations(SAMPLE,
-                "drr.regulation.cftc.rewrite.CFTCPart45TransactionReport");
+                "drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction");
         validations.forEach(System.out::println);
     }
 }

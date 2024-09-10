@@ -16,21 +16,19 @@ import java.util.stream.Stream;
 public class DataLoader {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 4) {
+        if (args.length != 3) {
             System.out.println("Usage: DataLoader <run-name> <input-path> <catalog.schema> <output-table>");
             System.out.println("""
-                    Example: ["load_data",
+                    Example: ["reportable_event",
                               "/Volumes/opensource_reg_reporting/orr/cdm-trades/",
-                              "opensource_reg_reporting.orr",
-                              "reportable_event"]
+                              "opensource_reg_reporting.orr"]
                     """);
         }
-        String runName = args[0];
+        String outputTable = args[0];
         String inputPath = args[1];
         String databaseName = args[2];
-        String outputTable = args[3];
 
-        SparkSession spark = SparkSession.builder().appName(runName).getOrCreate();
+        SparkSession spark = SparkSession.builder().appName(outputTable).getOrCreate();
         List<Row> rows = createRows(inputPath);
 
         // Define the schema

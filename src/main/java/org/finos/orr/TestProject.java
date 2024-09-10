@@ -5,6 +5,8 @@ import drr.regulation.esma.emir.refit.trade.ESMAEMIRTransactionReport;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestProject {
 
@@ -66,11 +68,10 @@ public class TestProject {
               "venueOfExecution" : "XNAS"
             }
             """;
-    public static void main(String[] args) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        String s1 = SparkProjectRunner.runProject(SAMPLE,
-                "drr.regulation.esma.emir.refit.trade.ESMAEMIRTransactionReport",
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+        Map<String, String> project = SparkProjectRunner.runProject(SAMPLE,
                 "drr.projection.iso20022.esma.emir.refit.trade.functions.Project_EsmaEmirTradeReportToIso20022",
                 "xml-config/auth030-esma-rosetta-xml-config.json");
-        System.out.printf(s1);
+        project.forEach((k, v) -> System.out.println(k + " --> " + v));
     }
 }

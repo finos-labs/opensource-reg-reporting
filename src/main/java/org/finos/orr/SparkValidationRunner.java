@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.spark.sql.functions.*;
+import static org.apache.spark.sql.types.DataTypes.StringType;
+import static org.apache.spark.sql.types.DataTypes.createMapType;
 
 public class SparkValidationRunner {
     public static final ObjectMapper OBJECT_MAPPER = RosettaObjectMapperCreator.forJSON().create();
@@ -30,18 +32,19 @@ public class SparkValidationRunner {
             printUsage();
             return;
         }
-        String runName = args[0];
-        String inputType = args[1];
-        String databaseName = args[2];
-        String inputTable = args[3];
+        String outputTable = args[0];
+        String inputTable = args[1];
+        String functionName = args[2];
+        String databaseName = args[3];
 
-        SparkSession spark = SparkSession.builder().appName(runName).getOrCreate();
+        SparkSession spark = SparkSession.builder().appName(outputTable).getOrCreate();
 
-        UDF1<VariantVal, List<Map<String, String>>> runValidations = (jsonInput) -> runValidations(jsonInput.toString(), inputType);
-        spark.udf().register(runName, runValidations, DataTypes.createArrayType(DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType)));
+        UDF1<VariantVal, List<Map<String, String>>> runValidations = (jsonInput) -> runValidations(jsonInput.toString(), functionName);
+        spark.udf().register(outputTable, runValidations, DataTypes.createArrayType(createMapType(StringType, StringType)));
 
-        Dataset<Row> df = spark.read().table("%s.%s".formatted(databaseName, inputTable))
-                .withColumn("validations", callUDF(runName, col("data")))
+        Dataset<Row> df = spark.read().table("%s.%s".formatted(databaseName, inputTable)).select(
+                        col("identifier"),  col("name"), col("data"))
+                .withColumn("validations", callUDF(outputTable, col("data")))
                 .drop(col("data"))
                 .withColumn("validation", explode(col("validations")))
                 .drop(col("validations"))
@@ -53,25 +56,26 @@ public class SparkValidationRunner {
                 .withColumn("validation_type", col("validation.validation_type"))
                 .drop(col("validation"));
 
-        df.write().mode(SaveMode.Overwrite).option("mergeSchema", "true").saveAsTable("%s.%s".formatted(databaseName, runName + "_validation"));
+        df.write().mode(SaveMode.Overwrite).option("mergeSchema", "true").saveAsTable("%s.%s".formatted(databaseName, outputTable));
     }
 
     private static void printUsage() {
-        System.out.println("Usage: SparkReportRunner <run-name> <function-name> <function-input-type> <catalog.schema> <input-table>");
+        System.out.println("Usage: <output-table> <input-table> <function-name> <catalog.schema>");
         System.out.println("""
-                Example: ["cftc_part_43",
-                          "drr.regulation.cftc.rewrite.CFTCPart45TransactionReport",
-                          "opensource_reg_reporting.orr",
-                          "cftc_part_43_report_json"]
+                Example: ["cftc_part_43_validation",
+                          "cftc_part_43_report",
+                          "drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction",
+                          "opensource_reg_reporting.orr"]
                 """);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static List<Map<String, String>> runValidations(String jsonInput, String inputType) throws JsonProcessingException, ClassNotFoundException {
+    public static List<Map<String, String>> runValidations(String jsonInput, String functionName) throws JsonProcessingException, ClassNotFoundException {
         Injector injector = Guice.createInjector(new DrrRuntimeModule());
         RosettaTypeValidator rosettaTypeValidator = injector.getInstance(RosettaTypeValidator.class);
 
-        RosettaModelObject object = (RosettaModelObject) OBJECT_MAPPER.readValue(jsonInput, Class.forName(inputType));
+        Class<RosettaModelObject> functionReturnType = OrrUtils.getFunctionReturnType(OrrUtils.getFunctionClass(functionName));
+
+        RosettaModelObject object = OBJECT_MAPPER.readValue(jsonInput, functionReturnType);
         ValidationReport validationReport = rosettaTypeValidator.runProcessStep(object.getType(), object);
         List<ValidationResult<?>> validationResults = validationReport.getValidationResults();
 

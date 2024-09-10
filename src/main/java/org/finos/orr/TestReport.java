@@ -1672,7 +1672,7 @@ public class TestReport {
             """;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        HashMap<String, String> s1 = SparkReportRunner.runReport(SAMPLE, "drr.regulation.common.TransactionReportInstruction", "drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction");
+        HashMap<String, String> s1 = SparkReportRunner.runReport(SAMPLE, "drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction");
         s1.forEach((k, v) -> System.out.println(k + " --> " + v));
     }
 }
