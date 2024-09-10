@@ -8,7 +8,6 @@ import com.regnosys.rosetta.common.serialisation.RosettaObjectMapperCreator;
 import com.rosetta.model.lib.functions.RosettaFunction;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
-import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.unsafe.types.VariantVal;
 
 import java.io.IOException;
@@ -18,8 +17,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.spark.sql.functions.callUDF;
-import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.*;
 import static org.apache.spark.sql.types.DataTypes.StringType;
 import static org.apache.spark.sql.types.DataTypes.createMapType;
 
@@ -48,7 +46,7 @@ public class SparkProjectRunner {
                         col("identifier"), col("name"), col("data"))
                 .withColumn("results", callUDF(outputTable, col("data")))
                 .drop(col("data"))
-                .withColumn("data", col("results.data"))
+                .withColumn("data", parse_json(col("results.data")))
                 .withColumn("xml", col("results.xml"))
                 .drop(col("results"));
 

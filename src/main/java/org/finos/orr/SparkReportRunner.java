@@ -11,7 +11,6 @@ import com.rosetta.model.lib.RosettaModelObject;
 import com.rosetta.model.lib.reports.ReportFunction;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
-import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.unsafe.types.VariantVal;
 
 import java.util.*;
