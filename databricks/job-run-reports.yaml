@@ -1,0 +1,338 @@
+resources:
+  jobs:
+    Run_Reports:
+      name: Run Reports
+      tasks:
+        - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.DataLoader
+            parameters:
+              - reportable_event
+              - /Volumes/opensource_reg_reporting/orr/cdm-trades/
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ASIC_Trade_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - asic_trade_report
+              - reportable_event
+              - drr.regulation.asic.rewrite.trade.reports.ASICTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ASIC_Trade_ISO20022
+          depends_on:
+            - task_key: ASIC_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkProjectRunner
+            parameters:
+              - asic_trade_iso20022
+              - asic_trade_report
+              - drr.projection.iso20022.asic.rewrite.trade.functions.Project_ASICTradeReportToIso20022
+              - xml-config/auth030-asic-rosetta-xml-config.json
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ASIC_Trade_ISO20022_Validation
+          depends_on:
+            - task_key: ASIC_Trade_ISO20022
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - asic_trade_iso20022_validation
+              - asic_trade_iso20022
+              - drr.projection.iso20022.asic.rewrite.trade.functions.Project_ASICTradeReportToIso20022
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ASIC_Trade_Validation
+          depends_on:
+            - task_key: ASIC_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - asic_trade_report_validation
+              - asic_trade_report
+              - drr.regulation.asic.rewrite.trade.reports.ASICTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: CFTC_Part43_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - cftc_part_43_report
+              - reportable_event
+              - drr.regulation.cftc.rewrite.reports.CFTCPart43ReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: CFTC_Part43_Validation
+          depends_on:
+            - task_key: CFTC_Part43_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - cftc_part_43_validation
+              - cftc_part_43_report
+              - drr.regulation.cftc.rewrite.reports.CFTCPart43ReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: CFTC_Part45_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - cftc_part_45_report
+              - reportable_event
+              - drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: CFTC_Part45_Validation
+          depends_on:
+            - task_key: CFTC_Part45_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - cftc_part_45_validation
+              - cftc_part_45_report
+              - drr.regulation.cftc.rewrite.reports.CFTCPart45ReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ESMA_EMIR_Trade_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - esma_emir_trade_report
+              - reportable_event
+              - drr.regulation.esma.emir.refit.trade.reports.ESMAEMIRTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ESMA_EMIR_ISO20022
+          depends_on:
+            - task_key: ESMA_EMIR_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkProjectRunner
+            parameters:
+              - esma_emir_trade_iso20022
+              - esma_emir_trade_report
+              - drr.projection.iso20022.esma.emir.refit.trade.functions.Project_EsmaEmirTradeReportToIso20022
+              - xml-config/auth030-esma-rosetta-xml-config.json
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ESMA_EMIR_ISO20022_Validation
+          depends_on:
+            - task_key: ESMA_EMIR_ISO20022
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - esma_emir_trade_iso20022_validation
+              - esma_emir_trade_iso20022
+              - drr.projection.iso20022.esma.emir.refit.trade.functions.Project_EsmaEmirTradeReportToIso20022
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: ESMA_EMIR_Trade_Validation
+          depends_on:
+            - task_key: ESMA_EMIR_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - esma_emir_trade_validation
+              - esma_emir_trade_report
+              - drr.regulation.esma.emir.refit.trade.reports.ESMAEMIRTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: FCA_UK_EMIR_Trade_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - fca_uk_emir_trade_report
+              - reportable_event
+              - drr.regulation.fca.ukemir.refit.trade.reports.FCAUKEMIRTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: JFSA_Trade_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - jfsa_trade_report
+              - reportable_event
+              - drr.regulation.jfsa.rewrite.trade.reports.JFSATradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: JFSA_Trade_ISO20022
+          depends_on:
+            - task_key: JFSA_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkProjectRunner
+            parameters:
+              - jfsa_trade_iso20022
+              - jfsa_trade_report
+              - drr.projection.iso20022.jfsa.rewrite.trade.functions.Project_JFSARewriteTradeReportToIso20022
+              - xml-config/auth030-jfsa-rosetta-xml-config.json
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: JFSA_Trade_ISO20022_Validation
+          depends_on:
+            - task_key: JFSA_Trade_ISO20022
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - jfsa_trade_iso20022_validation
+              - jfsa_trade_iso20022
+              - drr.projection.iso20022.jfsa.rewrite.trade.functions.Project_JFSARewriteTradeReportToIso20022
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: JFSA_Trade_Validation
+          depends_on:
+            - task_key: JFSA_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - jfsa_trade_validation
+              - jfsa_trade_report
+              - drr.regulation.jfsa.rewrite.trade.reports.JFSATradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: MAS_Trade_Report
+          depends_on:
+            - task_key: Load_Reportable_Event
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkReportRunner
+            parameters:
+              - mas_trade_report
+              - reportable_event
+              - drr.regulation.mas.rewrite.trade.reports.MASTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: MAS_Trade_ISO20022
+          depends_on:
+            - task_key: MAS_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkProjectRunner
+            parameters:
+              - mas_trade_iso20022
+              - mas_trade_report
+              - drr.projection.iso20022.mas.rewrite.trade.functions.Project_MASTradeReportToIso20022
+              - xml-config/auth030-mas-rosetta-xml-config.json
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: MAS_Trade_ISO20022_Validation
+          depends_on:
+            - task_key: MAS_Trade_ISO20022
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - mas_trade_iso20022_validation
+              - mas_trade_iso20022
+              - drr.projection.iso20022.mas.rewrite.trade.functions.Project_MASTradeReportToIso20022
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+        - task_key: MAS_Trade_Validation
+          depends_on:
+            - task_key: MAS_Trade_Report
+          spark_jar_task:
+            jar_uri: ""
+            main_class_name: org.finos.orr.SparkValidationRunner
+            parameters:
+              - mas_trade_validation
+              - mas_trade_report
+              - drr.regulation.mas.rewrite.trade.reports.MASTradeReportFunction
+              - opensource_reg_reporting.orr
+            run_as_repl: true
+          existing_cluster_id: 0828-123717-g2jch343
+          libraries:
+            - jar: /Volumes/opensource_reg_reporting/orr/jar/opensource-reg-reporting-1.0-SNAPSHOT.jar
+      queue:
+        enabled: true

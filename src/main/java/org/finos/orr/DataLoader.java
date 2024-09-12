@@ -34,7 +34,7 @@ public class DataLoader {
      */
     public static void main(String[] args) throws IOException {
         if (args.length != 3) {
-            System.out.println("Usage: DataLoader <run-name> <input-path> <catalog.schema> <output-table>");
+            System.out.println("Usage: <output-table> <input-path> <catalog.schema>");
             System.out.println("""
                     Example: ["reportable_event",
                               "/Volumes/opensource_reg_reporting/orr/cdm-trades/",
