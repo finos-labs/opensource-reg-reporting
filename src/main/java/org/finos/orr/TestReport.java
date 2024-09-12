@@ -1,14 +1,11 @@
 package org.finos.orr;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.regnosys.rosetta.common.serialisation.RosettaObjectMapper;
-
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
+/**
+ * Self-contained application to test a single Report Function locally or deployed on Spark.
+ */
 public class TestReport {
 
     private static String SAMPLE = """

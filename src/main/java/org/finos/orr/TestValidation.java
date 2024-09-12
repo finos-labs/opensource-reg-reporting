@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Self-contained application to test a single Validation Function locally or deployed on Spark.
+ */
 public class TestValidation {
 
     private static String SAMPLE = """

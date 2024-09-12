@@ -1,13 +1,12 @@
 package org.finos.orr;
 
-import drr.projection.iso20022.esma.emir.refit.trade.functions.Project_EsmaEmirTradeReportToIso20022;
-import drr.regulation.esma.emir.refit.trade.ESMAEMIRTransactionReport;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Self-contained application to test a single Project Function locally or deployed on Spark.
+ */
 public class TestProject {
 
     private static String SAMPLE = """
