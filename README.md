@@ -2,6 +2,8 @@
 
 [Insert Project Desc here]
 
+![image](https://github.com/user-attachments/assets/8e449798-c42b-4f04-a726-bd6b760dede2)
+
 
 ## Prerequisites
 - Basic Java, Maven and Git knowledge.
