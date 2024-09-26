@@ -1,0 +1,7 @@
+SPDXVersion: SPDX-2.0
+DataLicense: CC0-1.0
+Creator: REGnosys
+PackageName: opensource-reg-reporting
+PackageOriginator: REGnosys
+PackageHomePage: https://github.com/finos/opensource-reg-reporting
+PackageLicenseDeclared: Apache-2.0
