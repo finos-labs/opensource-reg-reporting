@@ -1,6 +1,8 @@
 # Opensource Regulatory Reporting
 
-[Insert Project Desc here]
+Open-Source Regulatory Reporting (ORR) is a project originating from the Reg Tech SIG at FINOS. It aims to build on the work done by industry participants to date in the area of Regtech and SupTech and provide some technical resources to further advance the adoption of Regtech solutions by providing reference implementations, connectivity solutions between existing open source projects and solutions in the market to further advance to their shared goal of better regulatory oversight in more efficient ways.
+
+Phase 1 of ORR is presented here, providing the code, directions to the resources, and step by step instructions (in this README file) for how to run ISDA's DRR code on Apach Spark. This is achieved using Databricks' platform. With CDM sample data loaded into Databricks as the test trade data to demonstrate how DRR code maps trade data to trade reports for a number of global regulatory regimes and then validates the outcomes against regulators' published validation rules. Finally the DRR code maps the reports into the necessary ISO20022 formats defined by regulators' published schemas and validates the XML output that would go to a trade repository. All these steps and outcomes are persisted in the database as tables for each step for each regulatory reporting regime. Spark SQL code is also provided to generate a dashboard of statistics of the performance of the reporting agains the requirements (i.e. the validatin results) - this is demobstrated via the Databricks Dashboard screen and provides a typical view that operations teams at a financial institution responsible for reporting processes would monnitor.
 
 ![image](https://github.com/user-attachments/assets/8e449798-c42b-4f04-a726-bd6b760dede2)
 
@@ -19,7 +21,7 @@
 
 1. **Checkout the project:**
    ```bash
-   git clone https://github.com/REGnosys/opensource-reg-reporting.git
+   git clone https://github.com/finos-labs/opensource-reg-reporting.git
    cd opensource-reg-reporting
    ```
 
@@ -54,48 +56,59 @@
 
 ## Databricks Environment Setup
 
-### Step 1: Create the Catalog
-1. **Open Databricks SQL**:
-    - Navigate to the Databricks workspace.
-    - Click on the "SQL" icon on the sidebar.
+### Step 1: Create the Catalog, Schema and Volumes
+**a. Open Databricks SQL:**
+- 	Navigate to the Databricks workspace.
+- 	Click on the "SQL Editor" icon on the sidebar.
 
-2. **Create the Catalog**:
-    - Run the following SQL command to create the catalog:
+**b. Create the Catalog**:
+- 	Create a New query "+" 
+- 	Run the following SQL command to create the catalog:
 ```
-%sql
 CREATE CATALOG opensource_reg_reporting;
 ```
 
-### Step 2: Create the Schema
-1. **Create the Schema**:
-    - Run the following SQL command to create the schema within the catalog:
-
+**c. Create the Schema**:
+- 	Create a New query "+" 
+- 	Run the following SQL command to create the schema within the catalog:
 ```
-%sql
 CREATE SCHEMA opensource_reg_reporting.orr;
 ```
-
-### Step 3: Create the Volumes
-1. **Create the Volumes**:
-    - Run the following SQL commands to create the volumes:
+**d. Create the Volumes**:
+- 	Create a New query "+" 
+- 	Run the following SQL commands to create the volumes:
 ```sql
-%sql
 CREATE VOLUME opensource_reg_reporting.orr.cdm_trades;
 CREATE VOLUME opensource_reg_reporting.orr.jar;
 ```
+The newly created *opensource_reg_reporting* Catalog should now appear in the Catalog explorer section via the Catalog icon with the *orr* Schema and *cdm_trades* and *jar* Volumes nested within it concluding Step 1 of the environment setup.
 
-### Step 4: Create the Compute Cluster
-1. **Navigate to Compute**:
-    - Click on the "Compute" icon on the sidebar.
+### Step 2: Load the data
 
-2. **Create a New Cluster**:
-    - Click on "Create Cluster".
-    - Set the cluster name to "ORR Main".
-    - Configure the cluster settings as needed (e.g., Databricks runtime version, node type, autoscaling options, etc.).
-    - Fill in settings as per screenshot: ![img.png](images/create-compute.png)
-    - Click "Create Cluster".
+Input data must be loaded into Databricks so that the Apache Spark applications have something to process, this input data is in the form of CDM trade data, which can be taken from the JSON examples in the CDM distibution. Or you can use your own CDM test data if you have it available.
 
-3. **Upload Applications Jar file to the cluster**
+- Download the folders of JSON CDM trades that will be reported
+- Navigate to Databricks volume called cdm_trades
+- Using the data loading tool, drag and drop to folders into Databricks to load the data into the catalog for use in this workspace
+
+### Step 3: Create the Compute cluster
+**a. Navigate to Compute**:
+- Click on the "Compute" icon on the sidebar.
+
+**b. Create a New Cluster**:
+- Click on "Create Compute" to open up a new Compute/cluster setup screen
+- Set the Compute name to 'ORR Main'
+- Configure the Compute/cluster settings per the screenshot below (i.e. choose 'Single node' radio button, set the Databricks runtime version, set the node type, autoscaling options, etc.)
+
+> Note that Node type may be different based on your cloud provider so choose something equivalent in terms of cores and memory
+
+> Note that setting Spark config and Environment variables in the the Advanced options/Spark tab is important also
+
+![img.png](images/create-compute.png)
+- Click "Create Compute"
+> Note it can take a few minutes for Spark to start and the Compute to be set up
+
+c. **Upload Applications Jar file to the Compute cluster**
    - Select the Compute Resource
    - Click on `Libraries` tab
    - Click on `Install New` button to the top right
@@ -104,17 +117,11 @@ CREATE VOLUME opensource_reg_reporting.orr.jar;
    - Upload the Jar file from [Build the project](#build-the-project) section
    - The page should look like this: ![img.png](create-compute-libs.png)
 
-4. **Restart the cluster**
+d. **Restart the Compute cluster**
 
-### Step 5: Create the Job
+### Step 4: Create the Job
 
-Each application can be run as a Spark job on Databricks. You can configure the job using the Databricks UI or a YAML configuration file. Here's a general outline of the steps involved:
-
-This project includes four main Spark applications: `DataLoader`, `SparkProjectRunner`, `SparkReportRunner`, and `SparkValidationRunner`. These applications are designed to be run on a Databricks cluster and interact with data stored in a Delta Lake table.
-
-#### **Pre-canned YAML Configuration**:
-
-This is the quickest and easiest to get set up. See sections below for detailed set up.
+The quickest and easiest to set up the job is by using the YAML file provided and loading that into the Databricks workflow. You may also use the Databricks UI to enter the details of the Job to run tasks and create the report tables.
 
 Use the following YAML configuration to create the job and tasks:
 - [job-run-reports.yaml](databricks/job-run-reports.yaml)
@@ -122,6 +129,7 @@ Use the following YAML configuration to create the job and tasks:
 - click on `Workflows` on the left menu
 - click `create job`
 - click on the 3 dot menu on the top right hand side and `switch to code version (YAML)`.
+- copy the text from the YAML file and paste into the file editor
 - save the Job
 
 #### Configuration Details
@@ -140,7 +148,7 @@ Use the following YAML configuration to create the job and tasks:
 4. **Execute the Job**
     - Run the Spark job on the Databricks cluster.
 
-> Note: Replace the placeholders (e.g., <output-table>, <input-table>, <function-name>, etc.) with the actual values for your environment.
+> Note: Replace the placeholders (e.g., <output-table>, <input-table>, <function-name>, etc.) with the actual values for your environment. The cluster-id must be changed to match the cluster id for your Databricks environment and this can be found by looking at the compute ORR Main you set up and noting the cluster id on the detais page.
 
 ```yaml
 - task_key: <task-key>
@@ -184,4 +192,5 @@ Use the following YAML configuration to create the job and tasks:
 
 ## Limitations
 
-TODO - Add section here
+- This implementation is not optimized, with the test data and applications provided the tasks took 7-12 mins to run. Optimization of this project to allow quicker experimentation would be a good first issue for the community to pursue
+- Lineage is at the level of the individual report level, or row in a table, which equates to a trade or its related report. More granular lineage is possible and likewise could be a good extension of this project by the community.
