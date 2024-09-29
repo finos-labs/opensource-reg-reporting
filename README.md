@@ -4,7 +4,7 @@ Open-Source Regulatory Reporting (ORR) is a project originating from the Reg Tec
 
 Phase 1 of ORR is presented here, providing the code, directions to the resources, and step by step instructions (in this README file) for how to run ISDA's DRR code on Apach Spark. This is achieved using Databricks' platform. With CDM sample data loaded into Databricks as the test trade data to demonstrate how DRR code maps trade data to trade reports for a number of global regulatory regimes and then validates the outcomes against regulators' published validation rules. Finally the DRR code maps the reports into the necessary ISO20022 formats defined by regulators' published schemas and validates the XML output that would go to a trade repository. All these steps and outcomes are persisted in the database as tables for each step for each regulatory reporting regime. Spark SQL code is also provided to generate a dashboard of statistics of the performance of the reporting agains the requirements (i.e. the validatin results) - this is demobstrated via the Databricks Dashboard screen and provides a typical view that operations teams at a financial institution responsible for reporting processes would monnitor.
 
-![image](/GitHub/opensource-reg-reporting/images/ORR-DashboardFront.png)
+![image](images/ORR-DashboardFront.png)
 
 
 ## Prerequisites
