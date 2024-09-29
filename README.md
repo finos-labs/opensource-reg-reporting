@@ -91,6 +91,8 @@ Input data must be loaded into Databricks so that the Apache Spark applications 
 - Navigate to Databricks volume called cdm_trades in the Catalog screen
 - Click the "Upload to this Volume" button and use the data loading tool. i.e. drag and drop your folders of sample data into folders in Databricks to load the data into the volume for use in this workspace
 
+![image](images/UploadtoVolume.png)
+
 ### Step 3: Create the Compute cluster
 **a. Navigate to Compute**:
 - Click on the "Compute" icon on the sidebar.
