@@ -16,7 +16,7 @@ Phase 1 of ORR is presented here, providing the code, directions to the resource
     - Download from the [DRR Distribution](https://drr.docs.rosetta-technology.io/source/download.html)
 - **Application JAR**: The compiled JAR file of the project should be uploaded to a Databricks volume.
     - See section [Build the project](#build-the-project)
-    - 
+      
 ## Build
 
 1. **Checkout the project:**
